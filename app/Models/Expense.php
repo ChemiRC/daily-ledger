@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
-    // Esto le da permiso a Laravel de escribir en estas columnas
-   protected $fillable = ['description', 'amount', 'expense_date', 'is_essential'];
+    // NO OLVIDES AÑADIR 'category_id' AQUÍ:
+    protected $fillable = ['description', 'amount', 'expense_date', 'is_essential', 'category_id'];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
