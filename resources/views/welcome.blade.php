@@ -36,12 +36,33 @@
 
         @if($categories->count() > 0)
         <div class="mb-6">
-            <h3 class="font-bold text-gray-700 mb-2 text-sm uppercase">Total por Categorías</h3>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-gray-700 text-sm uppercase">Filtrar por Categoría</h3>
+                @if(request()->has('category'))
+                    <a href="/" class="text-xs text-blue-600 hover:underline font-bold">Ver todos los gastos &times;</a>
+                @endif
+            </div>
             <div class="flex flex-wrap gap-2">
                 @foreach($categories as $category)
-                    <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold border border-indigo-100">
-                        {{ $category->name }}: ${{ number_format($category->expenses_sum_amount ?? 0, 2) }}
-                    </span>
+                    @php
+                        // Verificamos si la categoría actual es la que está seleccionada en la URL
+                        $isActive = request('category') == $category->id;
+                    @endphp
+                    
+                    <div class="inline-flex items-center rounded-full border transition {{ $isActive ? 'bg-indigo-600 border-indigo-600 shadow-md' : 'bg-indigo-50 border-indigo-100 hover:bg-indigo-200' }}">
+                        
+                        <a href="{{ $isActive ? '/' : '/?category=' . $category->id }}" 
+                           class="pl-3 pr-2 py-1 text-xs font-bold {{ $isActive ? 'text-white' : 'text-indigo-700' }}">
+                            {{ $category->name }}: ${{ number_format($category->expenses_sum_amount ?? 0, 2) }}
+                        </a>
+
+                        <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas borrar la categoría {{ $category->name }}? Los gastos no se perderán.');" class="pr-2 flex items-center">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-lg font-bold hover:text-red-500 {{ $isActive ? 'text-indigo-200' : 'text-indigo-400' }} leading-none">&times;</button>
+                        </form>
+
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -57,15 +78,16 @@
 
         <form action="{{ route('expenses.store') }}" method="POST" class="space-y-4">
             @csrf
-            
             <select name="category_id" class="w-full p-2 border rounded" required>
                 <option value="">Selecciona una categoría...</option>
                 @foreach($categories as $category)
-                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                        {{ $category->name }}
+                    </option>
                 @endforeach
             </select>
 
-            <input type="text" name="description" placeholder="¿En qué gastaste? (ej. Carga de Magna)" class="w-full p-2 border rounded" required>
+            <input type="text" name="description" placeholder="¿En qué gastaste?" class="w-full p-2 border rounded" required>
             <input type="number" name="amount" step="0.01" placeholder="Monto ($)" class="w-full p-2 border rounded" required>
             <input type="date" name="expense_date" value="{{ date('Y-m-d') }}" class="w-full p-2 border rounded" required>
             
@@ -81,7 +103,7 @@
 
         <hr class="my-8">
 
-        <h2 class="font-bold text-lg mb-3">Historial de Gastos</h2>
+        <h2 class="font-bold text-lg mb-3">Historial de Gastos {{ request()->has('category') ? '(Filtrado)' : '' }}</h2>
         <ul class="space-y-2">
             @foreach($expenses as $expense)
                 <li class="flex justify-between items-center p-3 rounded shadow-sm border {{ $expense->is_essential ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100' }}">
@@ -111,7 +133,7 @@
         </ul>
         
         @if($expenses->isEmpty())
-            <p class="text-center text-gray-400 mt-4 italic">No hay gastos registrados aún.</p>
+            <p class="text-center text-gray-400 mt-4 italic">No hay gastos en esta categoría aún.</p>
         @endif
     </div>
 </body>

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Expense extends Model
 {
     // NO OLVIDES AÑADIR 'category_id' AQUÍ:
-    protected $fillable = ['description', 'amount', 'expense_date', 'is_essential', 'category_id'];
+   protected $fillable = ['description', 'amount', 'expense_date', 'is_essential', 'category_id', 'user_id'];
 
     public function category()
     {
